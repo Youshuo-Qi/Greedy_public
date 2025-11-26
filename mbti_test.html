@@ -1,0 +1,435 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8" />
+  <title>MBTI 性格小测</title>
+  <style>
+    * {
+      box-sizing: border-box;
+    }
+
+    body {
+      margin: 0;
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, "Noto Sans SC", sans-serif;
+      background: radial-gradient(circle at top, #e0f2fe, #e5e7eb);
+      min-height: 100vh;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: #111827;
+    }
+
+    .app {
+      width: 100%;
+      max-width: 520px;
+      padding: 16px;
+    }
+
+    h1 {
+      text-align: center;
+      font-size: 24px;
+      margin-bottom: 16px;
+      letter-spacing: 0.08em;
+    }
+
+    .card {
+      background: rgba(255, 255, 255, 0.95);
+      border-radius: 18px;
+      box-shadow: 0 18px 40px rgba(15, 23, 42, 0.16);
+      padding: 20px 22px 22px;
+      backdrop-filter: blur(10px);
+      transition: all 0.25s ease;
+    }
+
+    .hidden {
+      display: none;
+    }
+
+    .progress {
+      width: 100%;
+      height: 6px;
+      background: #e5e7eb;
+      border-radius: 999px;
+      overflow: hidden;
+      margin-bottom: 14px;
+    }
+
+    .progress-bar {
+      height: 100%;
+      width: 0%;
+      background: linear-gradient(90deg, #38bdf8, #6366f1);
+      transition: width 0.25s ease;
+    }
+
+    .question-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 10px;
+      font-size: 13px;
+      color: #6b7280;
+    }
+
+    #question-text {
+      font-size: 17px;
+      font-weight: 600;
+      margin-bottom: 16px;
+      line-height: 1.5;
+      color: #111827;
+    }
+
+    .options {
+      display: grid;
+      gap: 8px;
+      margin-bottom: 18px;
+    }
+
+    .option {
+      position: relative;
+      display: flex;
+      align-items: center;
+      padding: 9px 11px;
+      border-radius: 999px;
+      border: 1px solid #e5e7eb;
+      background: #f9fafb;
+      cursor: pointer;
+      font-size: 14px;
+      transition: all 0.18s ease;
+    }
+
+    .option:hover {
+      border-color: #93c5fd;
+      background: #eff6ff;
+    }
+
+    .option input {
+      margin-right: 8px;
+      accent-color: #3b82f6;
+    }
+
+    .option-text {
+      flex: 1;
+    }
+
+    .question-index {
+      font-weight: 600;
+    }
+
+    .btn-row {
+      display: flex;
+      justify-content: flex-end;
+      gap: 8px;
+    }
+
+    button {
+      border-radius: 999px;
+      border: none;
+      padding: 8px 18px;
+      font-size: 14px;
+      cursor: pointer;
+      transition: all 0.18s ease;
+      font-weight: 500;
+    }
+
+    #next-btn {
+      background: linear-gradient(90deg, #38bdf8, #6366f1);
+      color: white;
+      box-shadow: 0 10px 18px rgba(37, 99, 235, 0.25);
+    }
+
+    #next-btn:disabled {
+      background: #d1d5db;
+      box-shadow: none;
+      cursor: not-allowed;
+    }
+
+    #next-btn:not(:disabled):hover {
+      transform: translateY(-1px);
+      box-shadow: 0 12px 22px rgba(37, 99, 235, 0.35);
+    }
+
+    #restart-btn {
+      background: white;
+      border: 1px solid #d1d5db;
+      color: #374151;
+    }
+
+    #restart-btn:hover {
+      background: #f3f4f6;
+    }
+
+    /* 结果卡片样式 */
+    #result-card h2 {
+      font-size: 20px;
+      margin-top: 4px;
+      margin-bottom: 10px;
+      text-align: center;
+    }
+
+    .result-main {
+      font-size: 16px;
+      font-weight: 600;
+      text-align: center;
+      margin-bottom: 8px;
+    }
+
+    .result-type {
+      font-size: 22px;
+      color: #f97316;
+      font-weight: 700;
+    }
+
+    .result-tagline {
+      text-align: center;
+      font-size: 13px;
+      color: #6b7280;
+      margin-bottom: 16px;
+    }
+
+    .result-section-title {
+      font-size: 14px;
+      font-weight: 600;
+      margin-top: 8px;
+      margin-bottom: 4px;
+    }
+
+    .result-list {
+      font-size: 13px;
+      color: #4b5563;
+      padding-left: 18px;
+      margin: 0;
+    }
+
+    .result-list li {
+      margin-bottom: 4px;
+    }
+
+    .result-footer {
+      margin-top: 14px;
+      font-size: 12px;
+      color: #9ca3af;
+      text-align: center;
+    }
+  </style>
+</head>
+<body>
+  <div class="app">
+    <h1>MBTI 性格小测 · Beta</h1>
+
+    <!-- 测试过程卡片 -->
+    <div id="quiz-card" class="card">
+      <div class="progress">
+        <div id="progress-bar" class="progress-bar"></div>
+      </div>
+
+      <div class="question-header">
+        <span id="question-count" class="question-index">第 1 / 10 题</span>
+        <span id="hint-text">请选择最贴近你的选项</span>
+      </div>
+
+      <div id="question-text"></div>
+
+      <div id="options" class="options"></div>
+
+      <div class="btn-row">
+        <button id="next-btn" disabled>下一题</button>
+      </div>
+    </div>
+
+    <!-- 结果卡片 -->
+    <div id="result-card" class="card hidden">
+      <h2>测评完成 ✅</h2>
+      <p class="result-main">
+        您的 MBTI 测评结果为：
+        <span class="result-type">ENTP</span>
+      </p>
+      <div class="result-tagline">
+        外向 · 直觉 · 思考 · 感知 —— 典型的“点子王 / 辩论家”类型
+      </div>
+
+      <div>
+        <div class="result-section-title">你的典型特征</div>
+        <ul class="result-list">
+          <li>思维敏捷，喜欢从不同角度拆解问题，热衷“脑洞大开”的讨论。</li>
+          <li>偏好宏观和长远视角，更关注“可能性”而不是既定规则。</li>
+          <li>不喜欢一成不变的环境，热爱尝试新鲜事物与跨界组合。</li>
+          <li>遇到分歧会本能地开启“辩论模式”，享受观点碰撞的过程。</li>
+        </ul>
+
+        <div class="result-section-title">适合你的发展方向</div>
+        <ul class="result-list">
+          <li>需要创意与策略的岗位：产品、策划、咨询、创业、商务拓展等。</li>
+          <li>允许你不断探索新点子、尝试新路径，而不是长期重复同一件事。</li>
+        </ul>
+      </div>
+
+      <div class="btn-row" style="margin-top: 16px; justify-content: center;">
+        <button id="restart-btn">再测一次</button>
+      </div>
+
+      <div class="result-footer">
+        本测评仅供娱乐参考，题目答案不影响结果展示。
+      </div>
+    </div>
+  </div>
+
+  <script>
+    // 题目列表（示例题，可以按需改文案）
+    const questions = [
+      {
+        text: "在一个新的环境中，你通常会：",
+        options: [
+          "主动找人聊天、尽快融入气氛",
+          "先观察一会儿，再慢慢参与"
+        ]
+      },
+      {
+        text: "做决定时，你更在意：",
+        options: [
+          "整体趋势和长远可能性",
+          "当前的细节和已知事实"
+        ]
+      },
+      {
+        text: "当有人和你观点不同，你会：",
+        options: [
+          "兴奋起来，想好好辩一辩",
+          "点到为止，避免激烈争论"
+        ]
+      },
+      {
+        text: "面对一项新任务，你更偏好：",
+        options: [
+          "先上手再说，做着做着就有想法",
+          "先查清流程和规范再行动"
+        ]
+      },
+      {
+        text: "你更享受哪种讨论：",
+        options: [
+          "天马行空地畅想未来可能性",
+          "脚踏实地地讨论可执行步骤"
+        ]
+      },
+      {
+        text: "当计划赶不上变化时，你通常会：",
+        options: [
+          "兴致更高，把它当成新的挑战",
+          "略感不安，希望按原计划推进"
+        ]
+      },
+      {
+        text: "你在团队中的常见角色是：",
+        options: [
+          "提出各种新点子和改进建议的人",
+          "确保大家按步骤落实的人"
+        ]
+      },
+      {
+        text: "面对规则和流程，你的态度更接近：",
+        options: [
+          "如果不合理，可以先做再优化规则",
+          "先遵守现有流程，之后再谈优化"
+        ]
+      },
+      {
+        text: "当你想到一个新想法时，你会：",
+        options: [
+          "立刻和别人分享，一起脑暴",
+          "在心里琢磨成熟之后再说"
+        ]
+      },
+      {
+        text: "如果同时有好几个有趣的想法，你通常：",
+        options: [
+          "先都尝试一点，再决定深挖哪一个",
+          "先认真评估，再选一个稳妥的推进"
+        ]
+      }
+    ];
+
+    const totalQuestions = questions.length;
+    let currentIndex = 0;
+
+    const questionTextEl = document.getElementById("question-text");
+    const optionsEl = document.getElementById("options");
+    const nextBtn = document.getElementById("next-btn");
+    const progressBar = document.getElementById("progress-bar");
+    const questionCountEl = document.getElementById("question-count");
+    const quizCard = document.getElementById("quiz-card");
+    const resultCard = document.getElementById("result-card");
+    const restartBtn = document.getElementById("restart-btn");
+
+    function renderQuestion() {
+      const q = questions[currentIndex];
+
+      // 更新题号
+      questionCountEl.textContent = `第 ${currentIndex + 1} / ${totalQuestions} 题`;
+
+      // 更新进度条
+      const progress = ((currentIndex) / totalQuestions) * 100;
+      progressBar.style.width = progress + "%";
+
+      // 题干
+      questionTextEl.textContent = q.text;
+
+      // 选项
+      optionsEl.innerHTML = "";
+      q.options.forEach((opt, idx) => {
+        const label = document.createElement("label");
+        label.className = "option";
+
+        const input = document.createElement("input");
+        input.type = "radio";
+        input.name = "option";
+        input.value = idx;
+
+        const span = document.createElement("span");
+        span.className = "option-text";
+        span.textContent = opt;
+
+        label.appendChild(input);
+        label.appendChild(span);
+        optionsEl.appendChild(label);
+
+        // 选中选项后，启用“下一题”
+        input.addEventListener("change", () => {
+          nextBtn.disabled = false;
+        });
+      });
+
+      // 当前题刚开始时禁用“下一题”
+      nextBtn.disabled = true;
+    }
+
+    nextBtn.addEventListener("click", () => {
+      // 这里我们不做分数计算，直接进入下一题
+      if (currentIndex < totalQuestions - 1) {
+        currentIndex++;
+        renderQuestion();
+      } else {
+        // 最后一题答完，显示结果卡片
+        showResult();
+      }
+    });
+
+    function showResult() {
+      // 填满进度条
+      progressBar.style.width = "100%";
+
+      quizCard.classList.add("hidden");
+      resultCard.classList.remove("hidden");
+    }
+
+    restartBtn.addEventListener("click", () => {
+      currentIndex = 0;
+      quizCard.classList.remove("hidden");
+      resultCard.classList.add("hidden");
+      renderQuestion();
+    });
+
+    // 初始化
+    renderQuestion();
+  </script>
+</body>
+</html>
